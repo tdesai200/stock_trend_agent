@@ -1,0 +1,140 @@
+{
+  "MU": {
+    "timestamp": "2026-06-18T11:42:06.050109",
+    "articles": [
+      {
+        "id": "e9b6fdce-d12c-3fd5-b054-b62833527af2",
+        "contentType": "STORY",
+        "title": "Stocks to Watch: Intel, Accenture, Micron, SpaceX",
+        "description": "",
+        "summary": "\u2197\ufe0f Intel (INTC): Shares in the tech giant surged after President Trump said Apple agreed to work with it to design and build chips in the U.S. \u2198\ufe0f Accenture (ACN): Shares in the consultancy and IT-services provider tumbled after it cut its guidance; other software stocks are also down.",
+        "pubDate": "2026-06-18T14:13:18Z",
+        "displayTime": "2026-06-18T14:13:18Z",
+        "isHosted": false,
+        "bypassModal": false,
+        "previewUrl": "https://finance.yahoo.com/m/e9b6fdce-d12c-3fd5-b054-b62833527af2/stocks-to-watch-intel-.html",
+        "thumbnail": {
+          "originalUrl": "https://media.zenfs.com/en/wsj.com/85484da5fb2f9dbc77672cdc3d4775f1",
+          "originalWidth": 1280,
+          "originalHeight": 640,
+          "caption": "",
+          "resolutions": [
+            {
+              "url": "https://s.yimg.com/uu/api/res/1.2/RQDCGt5uHnK6xuVTByNvbg--~B/aD02NDA7dz0xMjgwO2FwcGlkPXl0YWNoeW9u/https://media.zenfs.com/en/wsj.com/85484da5fb2f9dbc77672cdc3d4775f1",
+              "width": 1280,
+              "height": 640,
+              "tag": "original"
+            },
+            {
+              "url": "https://s.yimg.com/uu/api/res/1.2/7Nc.OrvjGhyXmBJck0TZQQ--~B/Zmk9c3RyaW07aD0xMjg7dz0xNzA7YXBwaWQ9eXRhY2h5b24-/https://media.zenfs.com/en/wsj.com/85484da5fb2f9dbc77672cdc3d4775f1",
+              "width": 170,
+              "height": 128,
+              "tag": "170x128"
+            }
+          ]
+        },
+        "provider": {
+          "displayName": "The Wall Street Journal",
+          "url": "http://www.wsj.com/",
+          "sourceId": "wsj.com"
+        },
+        "canonicalUrl": {
+          "url": "https://www.wsj.com/livecoverage/stock-market-today-dow-sp-500-nasdaq-06-18-2026/card/stocks-to-watch-intel-apple-smith-wesson-CPWrDsktYLV7juQ6yYSl?siteid=yhoof2&yptr=yahoo",
+          "site": "finance",
+          "region": "US",
+          "lang": "en-US"
+        },
+        "clickThroughUrl": null,
+        "metadata": {
+          "editorsPick": false
+        },
+        "finance": {
+          "premiumFinance": {
+            "isPremiumNews": false,
+            "isPremiumFreeNews": false
+          }
+        },
+        "storyline": null
+      }
+    ]
+  },
+  "TSLA": {
+    "timestamp": "2026-06-18T11:44:18.294634",
+    "articles": [
+      {
+        "id": "1d2d9618-b683-3091-a9a7-a7e7ccfcdb62",
+        "contentType": "STORY",
+        "title": "Exclusive-Sweden may oppose Tesla's supervised self-driving tech in Europe over speeding concerns",
+        "description": "",
+        "summary": "By Marie Mannes and Abhirup Roy STOCKHOLM/SAN FRANCISCO, June 18 (Reuters) - A Swedish transport authority is recommending a vote against the Europe-wide rollout of Tesla's supervised self-driving",
+        "pubDate": "2026-06-18T15:37:00Z",
+        "displayTime": "2026-06-18T15:37:00Z",
+        "isHosted": true,
+        "bypassModal": false,
+        "previewUrl": null,
+        "thumbnail": {
+          "originalUrl": "https://media.zenfs.com/en/reuters.com/87208d4f2283032b95e4628a114a6e49",
+          "originalWidth": 800,
+          "originalHeight": 504,
+          "caption": "A logo of Tesla Motors on an electric car model is seen outside a showroom in New York June 28, 2010. Electric carmaker Tesla Motors raised the number of shares it will sell in its initial public offering by 20 percent, an early sign that investor interest in the startup is strong.   REUTERS/Shannon Stapleton   (UNITED STATES - Tags: TRANSPORT BUSINESS)",
+          "resolutions": [
+            {
+              "url": "https://s.yimg.com/uu/api/res/1.2/RdxsEQ0S2asuuIR4M.5Sgg--~B/aD01MDQ7dz04MDA7YXBwaWQ9eXRhY2h5b24-/https://media.zenfs.com/en/reuters.com/87208d4f2283032b95e4628a114a6e49",
+              "width": 800,
+              "height": 504,
+              "tag": "original"
+            },
+            {
+              "url": "https://s.yimg.com/uu/api/res/1.2/y6bfDV3tD1y7AA.xruFHfg--~B/Zmk9c3RyaW07aD0xMjg7dz0xNzA7YXBwaWQ9eXRhY2h5b24-/https://media.zenfs.com/en/reuters.com/87208d4f2283032b95e4628a114a6e49",
+              "width": 170,
+              "height": 128,
+              "tag": "170x128"
+            }
+          ]
+        },
+        "provider": {
+          "displayName": "Reuters",
+          "url": "https://www.reuters.com/",
+          "sourceId": "reuters.com"
+        },
+        "canonicalUrl": {
+          "url": "https://uk.finance.yahoo.com/news/exclusive-sweden-may-oppose-teslas-153700466.html",
+          "site": "finance",
+          "region": "GB",
+          "lang": "en-GB"
+        },
+        "clickThroughUrl": {
+          "url": "https://finance.yahoo.com/news/exclusive-sweden-may-oppose-teslas-153700466.html",
+          "site": "finance",
+          "region": "US",
+          "lang": "en-US"
+        },
+        "metadata": {
+          "editorsPick": false
+        },
+        "finance": {
+          "premiumFinance": {
+            "isPremiumNews": false,
+            "isPremiumFreeNews": false
+          }
+        },
+        "storyline": null
+      }
+    ]
+  },
+  "KGC": {
+    "timestamp": "2026-06-18T12:32:28.101954",
+    "articles": [
+      {
+        "title": "As gold's tumble continues, traders bet the pain may last for two more years",
+        "summary": "Selling in the precious metal just keeps getting worse, with the GLD ETF now down 25% from its intraday record in February.",
+        "description": "Selling in the precious metal just keeps getting worse, with the GLD ETF now down 25% from its intraday record in February.",
+        "canonicalUrl": "https://www.cnbc.com/2026/06/10/as-golds-tumble-continues-traders-bet-the-pain-may-last-for-two-more-years.html",
+        "provider": {
+          "url": "https://cnbc.com"
+        },
+        "pubDate": "2026-06-18T16:32:23.239616"
+      }
+    ]
+  }
+}

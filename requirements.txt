@@ -1,0 +1,11 @@
+yfinance>=0.2.61
+pandas
+numpy
+ta
+lxml
+vaderSentiment
+dash
+anthropic
+python-dotenv
+requests
+gunicorn>=22.0.0

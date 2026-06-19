@@ -1,0 +1,44 @@
+
+Big picture: you’ve moved from “indicator toy” to “structured analysis assistant.”
+
+Best next-phase enhancements (highest impact first)
+
+Add backtesting + scorecard analytics
+Measure precision/recall of decisions over 3, 7, 14-day horizons.
+Track hit rate by signal type (technical-only vs full-context).
+This gives objective proof of value.
+Event-aware risk engine
+Add economic calendar + FOMC/CPI/NFP/earnings-event risk.
+Auto-adjust confidence and recommendation aggressiveness around event windows.
+Portfolio-level view
+Add multi-ticker ranking table: strongest bullish, highest risk-off, confidence dispersion.
+Add position-sizing hints (small/medium/large conviction buckets).
+Chart intelligence panel
+
+“volatility penalty applied”
+“macro supportive”
+“earnings risk imminent”
+Macro model upgrade
+Replace pure keyword macro scoring with:
+source-weighted sentiment
+recency decay
+regime labels (risk-on, risk-off, transition)
+News quality controls
+Deduplicate near-identical articles across feeds.
+Add freshness score and source credibility weights.
+Penalize stale or low-information headlines.
+Decision policy modes
+Add selectable profiles:
+Conservative
+Balanced
+Aggressive
+Each profile changes thresholds (RSI bands, ATR penalty, confidence caps).
+Production hardening
+Background job runner (scheduled daily analysis).
+Persistent DB for run history.
+Alerting (email/slack) for high-conviction or risk-flip events.
+What I’d do next if we start immediately
+
+Build backtesting and metrics dashboard first.
+Add portfolio ranking + chart panel second.
+Improve macro/news scoring sophistication third.

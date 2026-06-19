@@ -1,0 +1,84 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="900" height="620" viewBox="0 0 900 620" role="img" aria-label="Stock market themed abstract chart">
+  <defs>
+    <linearGradient id="bg" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0%" stop-color="#0e1f2f"/>
+      <stop offset="100%" stop-color="#10293f"/>
+    </linearGradient>
+    <linearGradient id="up" x1="0" y1="1" x2="0" y2="0">
+      <stop offset="0%" stop-color="#1dd1a1"/>
+      <stop offset="100%" stop-color="#7ef5d0"/>
+    </linearGradient>
+    <linearGradient id="down" x1="0" y1="1" x2="0" y2="0">
+      <stop offset="0%" stop-color="#ff6b6b"/>
+      <stop offset="100%" stop-color="#ff9f9f"/>
+    </linearGradient>
+    <filter id="glow" x="-50%" y="-50%" width="200%" height="200%">
+      <feGaussianBlur stdDeviation="4" result="blur"/>
+      <feMerge>
+        <feMergeNode in="blur"/>
+        <feMergeNode in="SourceGraphic"/>
+      </feMerge>
+    </filter>
+  </defs>
+
+  <rect width="900" height="620" fill="url(#bg)" rx="28"/>
+
+  <g opacity="0.2" stroke="#4e6f91" stroke-width="1">
+    <line x1="50" y1="100" x2="850" y2="100"/>
+    <line x1="50" y1="180" x2="850" y2="180"/>
+    <line x1="50" y1="260" x2="850" y2="260"/>
+    <line x1="50" y1="340" x2="850" y2="340"/>
+    <line x1="50" y1="420" x2="850" y2="420"/>
+    <line x1="50" y1="500" x2="850" y2="500"/>
+    <line x1="100" y1="70" x2="100" y2="550"/>
+    <line x1="200" y1="70" x2="200" y2="550"/>
+    <line x1="300" y1="70" x2="300" y2="550"/>
+    <line x1="400" y1="70" x2="400" y2="550"/>
+    <line x1="500" y1="70" x2="500" y2="550"/>
+    <line x1="600" y1="70" x2="600" y2="550"/>
+    <line x1="700" y1="70" x2="700" y2="550"/>
+    <line x1="800" y1="70" x2="800" y2="550"/>
+  </g>
+
+  <g filter="url(#glow)">
+    <polyline fill="none" stroke="#8ad5ff" stroke-width="4"
+      points="70,440 130,410 190,430 250,360 310,390 370,320 430,340 490,270 550,300 610,240 670,260 730,200 790,230 840,170"/>
+  </g>
+
+  <g>
+    <line x1="140" y1="370" x2="140" y2="470" stroke="#7ef5d0" stroke-width="4"/>
+    <rect x="126" y="390" width="28" height="60" fill="url(#up)" rx="4"/>
+
+    <line x1="220" y1="300" x2="220" y2="420" stroke="#7ef5d0" stroke-width="4"/>
+    <rect x="206" y="325" width="28" height="72" fill="url(#up)" rx="4"/>
+
+    <line x1="300" y1="340" x2="300" y2="470" stroke="#ff9f9f" stroke-width="4"/>
+    <rect x="286" y="360" width="28" height="78" fill="url(#down)" rx="4"/>
+
+    <line x1="380" y1="250" x2="380" y2="390" stroke="#7ef5d0" stroke-width="4"/>
+    <rect x="366" y="275" width="28" height="86" fill="url(#up)" rx="4"/>
+
+    <line x1="460" y1="270" x2="460" y2="420" stroke="#ff9f9f" stroke-width="4"/>
+    <rect x="446" y="300" width="28" height="88" fill="url(#down)" rx="4"/>
+
+    <line x1="540" y1="190" x2="540" y2="340" stroke="#7ef5d0" stroke-width="4"/>
+    <rect x="526" y="220" width="28" height="90" fill="url(#up)" rx="4"/>
+
+    <line x1="620" y1="205" x2="620" y2="360" stroke="#7ef5d0" stroke-width="4"/>
+    <rect x="606" y="235" width="28" height="92" fill="url(#up)" rx="4"/>
+
+    <line x1="700" y1="150" x2="700" y2="300" stroke="#7ef5d0" stroke-width="4"/>
+    <rect x="686" y="180" width="28" height="85" fill="url(#up)" rx="4"/>
+
+    <line x1="780" y1="180" x2="780" y2="330" stroke="#ff9f9f" stroke-width="4"/>
+    <rect x="766" y="205" width="28" height="95" fill="url(#down)" rx="4"/>
+  </g>
+
+  <g fill="#b6c8dc" font-family="Segoe UI, Arial, sans-serif" font-size="16" opacity="0.85">
+    <text x="56" y="575">09:30</text>
+    <text x="230" y="575">11:00</text>
+    <text x="405" y="575">12:30</text>
+    <text x="580" y="575">14:00</text>
+    <text x="755" y="575">15:30</text>
+  </g>
+</svg>
