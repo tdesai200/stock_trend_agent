@@ -34,7 +34,8 @@ from src.trend import classify_trend
 
 # Load environment variables from .env when python-dotenv is available.
 if load_dotenv is not None:
-    load_dotenv()
+    load_dotenv(override=True)
+    #load_dotenv()
 
 
 MIN_ROWS_RSI_ATR = 14
