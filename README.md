@@ -1,25 +1,32 @@
 # Stock Trend Agent
 
-Daily stock trend assistant that generates suggestions with transparent rationale and confidence, designed to evolve into a multi-agent dashboard with an in-app analysis assistant.
+AI-assisted market insights platform that transforms fragmented stock analysis workflows into one explainable decision surface with confidence scoring, multi-source news, and watchlist-driven daily signals.
 
-## Product Direction
-Target user flow over the next phases:
-- Week 1: Python script + command-line output
-- Week 2: Dash dashboard
-- Week 3: Interactive charts
+Designed for both web dashboards and eventual mobile app (planned v1.1+ for iOS/Android via App Store).
 
-Example future interaction:
-- You: Analyze NVDA
-- Agent: Trend: Bullish, RSI: 61, Score: 3/3, Recommendation: Continue monitoring momentum.
+## Current Status: V1 Web MVP
+- ✅ Landing page with product value proposition
+- ✅ Multi-ticker analyzer with confidence-driven decisions
+- ✅ Explainable rationale with criteria breakdown
+- ✅ Persistent watchlist management
+- ✅ Daily watchlist signals with trend reversal alerts
+- ✅ In-app analysis assistant (ticker and concept Q&A)
+- ✅ Trusted-source news filtering (with Claude relevance scoring)
+- ✅ Macro meter and multi-factor signal fusion
 
-## Week 1 Objective
-Ship an MVP that runs daily for a small ticker universe and produces a markdown report with trend + suggestion + reasons.
+## Roadmap: App Store Submission (Target Q4 2026)
+See `docs/app_store_roadmap.md` for compliance, architecture, and launch checklist.
 
-## Current Structure
-- data/: raw and processed snapshots
-- reports/: generated daily reports and evaluation outputs
-- src/: source code
-- docs/: project planning and agent contracts
+## Project Structure
+- **app_dash.py**: Main Dash web application (UI, callbacks, watchlist, signals)
+- **src/**: Analysis pipeline (technical, news, earnings, fundamentals, macro)
+- **data/**: Market data snapshots, watchlist, and daily signal runs
+  - `watchlist.json`: Saved ticker watchlist
+  - `watchlist_daily_signals.json`: Historical daily signal runs
+- **docs/**: Product planning, decision criteria, app store roadmap
+- **assets/**: CSS styling, market hero SVG, chat interface styles
+- **reports/**: Generated daily reports (markdown format)
+- **wsgi.py**: Production WSGI entrypoint for Render deployment
 
 ## Setup
 1. Create and activate a Python virtual environment.
@@ -31,11 +38,12 @@ Ship an MVP that runs daily for a small ticker universe and produces a markdown 
 For enhanced news relevance and filtering:
 
 1. Get your Anthropic API key from [console.anthropic.com](https://console.anthropic.com)
-2. Add it to the `.env` file:
+2. For local development, add it to the `.env` file:
    ```
    ANTHROPIC_API_KEY=your_key_here
    ```
-3. Restart the dashboard. News filtering will now:
+3. For Render, add the same key in `Render Dashboard > Your Service > Environment` as `ANTHROPIC_API_KEY`. Do not include quotes around the value.
+4. Restart the dashboard locally, or redeploy/restart the Render service. News filtering will now:
    - Use Anthropic account-available Claude models to assess article relevance to each ticker
    - Cache results for 24 hours (cheap operation)
    - Fall back to VADER sentiment-only mode if Claude unavailable
@@ -51,9 +59,22 @@ For enhanced news relevance and filtering:
 - Check box: "Use Claude AI for news relevance (24h cache)"
 - Unchecked: Falls back to VADER-only (no LLM cost)
 
-## Week 2 Dashboard (Dash)
-Run:
+## Quick Start
+
+### Local Development
+```bash
 python app_dash.py
+```
+Opens browser at `http://127.0.0.1:8051`
+
+### First-Time User Flow
+1. View landing page with product value proposition
+2. Accept disclaimer (compliance requirement)
+3. Create or import watchlist (up to 20 tickers)
+4. Click "Run Daily Signals" to populate today's signals
+5. Review daily scorecard with explainable reasons and trusted headlines
+6. Check trend reversal alerts to act on reversals early
+7. Use analysis assistant for explanations
 
 ## Free Hosting For iPhone Access
 You do not need a separate iPhone project to use this on your phone.
@@ -73,35 +94,73 @@ Typical Render configuration:
 - Build command: `pip install -r requirements.txt`
 - Start command: `gunicorn wsgi:server`
 - Required environment variables: `ANTHROPIC_API_KEY` and any optional SSL flags you use locally
+- `render.yaml` marks `ANTHROPIC_API_KEY` as `sync: false`, so Render will not copy your laptop `.env`; set the secret manually in the Render dashboard.
 
 Important free-tier caveats:
 - Free services sleep when idle, so the first load can take time.
 - Local disk is ephemeral, so cache files under `data/` are not guaranteed to persist.
 - Claude usage itself is not free unless your Anthropic account has free credits.
 
-Dashboard capabilities:
-- Ticker input box (comma-separated).
-- Analyze action for one or many tickers.
-- Scorecard view with decisions, confidence, and signal status.
-- Rationale panel with reasons and context streams.
-- Visual criteria breakdown cards (technical, risk, earnings, fundamentals, gating).
-- Macro Meter (supportive / neutral / risk-off) with macro summary details.
-- News source diversity section (Yahoo/CNBC/Reuters/MarketWatch counts).
-- Floating Analysis Assistant chat bubble for questions about macro tone, RSI, risk adjustment, trend, confidence, earnings, fundamentals, and the metrics shown on the page.
-- Example question chips that populate the input field; users then press Send to ask.
-- Supports ticker-aware questions like "why CMCSA shows trend down" by extracting the ticker from the prompt and building on-demand context when needed.
-- General concept questions are also allowed even before a stock is analyzed.
-- Chat window is draggable and opens as a floating panel instead of blocking the whole page.
+## Dashboard Features
 
-## Off-Hours and Provider Fallback
-- The dashboard does not assume the latest calendar date always has live market data.
-- If Yahoo Finance returns no daily price data for a ticker, the app now falls back to the latest cached raw snapshot available in `data/raw/` on or before the requested date.
-- This helps the app stay usable during provider hiccups, off-hours, weekends, or date-range mismatches.
-- When that happens, the terminal logs a warning showing that cached data was used.
-- If there is no cached snapshot either, the app can optionally try Yahoo's direct chart endpoint to fetch the last available online daily history.
-- In environments with SSL interception or certificate issues, enable this final fallback explicitly with:
-   - `PRICE_ALLOW_INSECURE_SSL=true`
-- When enabled, the dashboard also shows whether the ticker used live market data, cached data, or the direct Yahoo fallback.
+### Landing Page
+- Product value proposition with pain-point framing
+- "Why This Product Is Useful" section explaining workflow consolidation
+- "What Value You Get" highlighting key benefits
+- "How It Works" 3-step pipeline explanation
+- CTA buttons with smooth anchor linking
+
+### Watchlist Management
+- Save up to 20 tickers as persistent watchlist
+- Watchlist displays as visual chips for quick reference
+- Shared watchlist in both analyzer and daily signals sections
+- Watchlist stored in `data/watchlist.json` (persistent across sessions)
+
+### Daily Signals
+- One-click "Run Daily Signals" button
+- Daily Watchlist Signals table with:
+  - Symbol, Trend, Decision, Confidence
+  - **Explainable Reason**: Top reason for current decision
+  - **Trusted Headlines**: 1-2 most relevant news items
+- **Trend Reversal Alerts**: Notification panel showing uptrend→downtrend or vice versa
+- Signal history saved in `data/watchlist_daily_signals.json` (30-day retention)
+
+### Analyzer & Scorecard
+- Manual ticker input (comma-separated) or load from watchlist
+- Analyze action for one or many tickers
+- Scorecard view with decisions, confidence, and signal status
+- Detailed rationale panel with reasons and context streams
+- Visual criteria breakdown cards (technical, risk, earnings, fundamentals, gating)
+- Macro Meter (supportive / neutral / risk-off) with macro summary
+- News source diversity section (Yahoo/CNBC/Reuters/MarketWatch counts)
+
+### Analysis Assistant (Chat Bubble)
+- Floating chat interface for ticker and concept Q&A
+- Questions routing:
+  - **analysis_context**: Explain current dashboard decision
+  - **general_ticker**: Company/ticker overview
+  - **general_concept**: Explain RSI, trend, confidence, macro tone
+- Supports ticker extraction (e.g., "why CMCSA shows trend down")
+- Example question chips for quick prompts
+- Draggable modal window
+
+## Data Quality & Fallback Strategy
+The dashboard prioritizes live online data with intelligent fallback to maintain reliability:
+
+1. **Live Data (Preferred)**: yfinance daily OHLCV
+2. **Online Fallback**: Yahoo chart endpoint (if yfinance fails)
+3. **Cache Fallback**: Latest snapshot from `data/raw/` (only if online unavailable)
+
+Each analysis shows a data freshness badge:
+- **LIVE Yahoo**: In-market data from yfinance
+- **FALLBACK Yahoo Direct**: Yahoo chart endpoint (slightly delayed)
+- **CACHED Snapshot**: Historical data from disk (clearly marked)
+- **UNKNOWN**: Data source not detected
+
+For SSL interception environments, enable:
+```bash
+export PRICE_ALLOW_INSECURE_SSL=true
+```
 
 ## How To Interpret Confidence and RSI
 - Confidence (0.00 to 1.00): composite score from technicals, NLP news sentiment, macro news, earnings, fundamentals, and risk guardrails.
@@ -150,8 +209,16 @@ Dashboard capabilities:
 4. Generate suggestion and confidence.
 5. Write daily report.
 
-## This Week Execution
-Follow docs/14_day_task_board.md for day-by-day actions.
+## Product Compliance & Trust
+- All UI text uses education-first, non-advisory language
+- Clear "This is not financial advice" messaging throughout
+- Future versions will add:
+  - Mandatory disclaimer modal on first app load
+  - User account system with privacy controls
+  - Data deletion endpoint
+  - Support contact form in settings
+
+See `docs/app_store_roadmap.md` for full compliance checklist.
 
 ## Decision Rules and Guardrails
 - Suggestion criteria and RSI thresholds: docs/decision_criteria_and_guardrails.md
@@ -175,8 +242,11 @@ Contract details are in docs/agent_prompt_contracts.md.
 - Full-context strict gating is currently set to disabled by default to allow directional outputs during iteration.
 - The in-app analysis assistant is active and can answer both general concept questions and ticker-specific questions from the dashboard.
 
-## Motivation System
-- No zero days: minimum 45 minutes.
-- Ship one artifact daily.
-- Friday demo cadence.
-- End each day with tomorrow's first task written down.
+## Next Steps (Toward App Store v1)
+Prioritized roadmap:
+1. **Week 1**: Add disclaimer modal, Settings page, Privacy/Terms links
+2. **Week 2**: Loading states, empty state messaging, error retry logic
+3. **Week 3**: Mobile responsiveness audit, app icon creation, screenshots
+4. **Week 4**: Privacy policy, TestFlight submission, review cycle
+
+See `docs/app_store_roadmap.md` for detailed sprint plan and success criteria.

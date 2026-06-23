@@ -10,6 +10,13 @@ from dataclasses import dataclass
 from typing import Literal, Optional
 
 try:
+    import truststore
+
+    truststore.inject_into_ssl()
+except Exception:
+    pass
+
+try:
     from anthropic import Anthropic, APIConnectionError, APIStatusError
 except ImportError:
     Anthropic = None
@@ -31,6 +38,14 @@ class ChatResponse:
 _DETECTED_MODEL = None
 _API_STATUS_CHECKED = False
 _API_STATUS_WORKING = False
+
+
+def _get_anthropic_api_key() -> str:
+    """Read Anthropic API key from the runtime environment."""
+    api_key = os.getenv("ANTHROPIC_API_KEY", "").strip()
+    if len(api_key) >= 2 and api_key[0] == api_key[-1] and api_key[0] in {"'", '"'}:
+        api_key = api_key[1:-1].strip()
+    return api_key
 
 
 def check_api_health() -> bool:
@@ -67,7 +82,7 @@ def get_claude_client() -> Optional[Anthropic]:
     if not Anthropic:
         return None
     
-    api_key = os.getenv("ANTHROPIC_API_KEY", "").strip()
+    api_key = _get_anthropic_api_key()
     if not api_key:
         return None
     
@@ -319,8 +334,8 @@ def answer_question(
         return ChatResponse(
             success=False,
             message=(
-                "Claude API is not available. Please add ANTHROPIC_API_KEY to your .env file "
-                "and restart the app to enable AI-powered explanations."
+                "Claude API is not available. Set ANTHROPIC_API_KEY in your environment "
+                "(Render Dashboard > Environment, or local .env) and restart/redeploy the app."
             ),
             is_on_topic=True,
             question_count_remaining=max_questions - questions_asked - 1,
@@ -436,8 +451,9 @@ Remind users this is analytical support, not financial advice."""
             )
         elif "401" in error_msg or "authentication" in error_msg or "unauthorized" in error_msg:
             user_msg = (
-                "API authentication failed. Please verify that your ANTHROPIC_API_KEY in .env is correct "
-                "and restart the app."
+                "API authentication failed. Verify ANTHROPIC_API_KEY in the running environment "
+                "(Render Dashboard > Environment for hosted deploys, or local .env for VS Code), "
+                "then restart/redeploy the app."
             )
         elif "429" in error_msg or "rate" in error_msg:
             user_msg = "API rate limit reached. Please wait a moment and try again."

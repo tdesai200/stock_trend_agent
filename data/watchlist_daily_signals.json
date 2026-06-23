@@ -1,0 +1,46 @@
+{
+  "runs": [
+    {
+      "date": "2026-06-23",
+      "symbols": [
+        {
+          "symbol": "AAPL",
+          "trend": "Neutral",
+          "final_decision": "No Action",
+          "confidence": 0.55
+        },
+        {
+          "symbol": "MSFT",
+          "trend": "Downtrend",
+          "final_decision": "Reduce Risk",
+          "confidence": 0.72
+        },
+        {
+          "symbol": "NVDA",
+          "trend": "Neutral",
+          "final_decision": "No Action",
+          "confidence": 0.55
+        },
+        {
+          "symbol": "AMZN",
+          "trend": "Downtrend",
+          "final_decision": "Reduce Risk",
+          "confidence": 0.72
+        },
+        {
+          "symbol": "MU",
+          "trend": "Uptrend",
+          "final_decision": "Hold",
+          "confidence": 0.56
+        },
+        {
+          "symbol": "CMCSA",
+          "trend": "Downtrend",
+          "final_decision": "Reduce Risk",
+          "confidence": 0.72
+        }
+      ]
+    }
+  ],
+  "updated_at": "2026-06-23T17:44:01.488012+00:00"
+}

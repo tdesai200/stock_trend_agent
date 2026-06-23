@@ -177,15 +177,15 @@ def ingest_daily_ohlcv(symbol: str, as_of_date: date, source: str) -> pd.DataFra
 
     if data.empty:
         try:
-            return _load_cached_raw_snapshot(symbol=symbol, as_of_date=as_of_date)
-        except ValueError as cached_exc:
+            return _load_yahoo_chart_fallback(symbol=symbol, as_of_date=as_of_date)
+        except Exception as chart_exc:
             try:
-                return _load_yahoo_chart_fallback(symbol=symbol, as_of_date=as_of_date)
-            except Exception as chart_exc:
+                return _load_cached_raw_snapshot(symbol=symbol, as_of_date=as_of_date)
+            except ValueError as cached_exc:
                 raise ValueError(
-                    f"No live data returned for symbol={symbol}; cached snapshot unavailable; "
-                    f"Yahoo chart fallback failed: {chart_exc}"
-                ) from cached_exc
+                    f"No live data returned for symbol={symbol}; Yahoo chart fallback failed: {chart_exc}; "
+                    f"cached snapshot unavailable: {cached_exc}"
+                ) from chart_exc
 
     data = data.reset_index()
     data = _normalize_columns(data)
@@ -200,15 +200,15 @@ def ingest_daily_ohlcv(symbol: str, as_of_date: date, source: str) -> pd.DataFra
 
     if data.empty:
         try:
-            return _load_cached_raw_snapshot(symbol=symbol, as_of_date=as_of_date)
-        except ValueError as cached_exc:
+            return _load_yahoo_chart_fallback(symbol=symbol, as_of_date=as_of_date)
+        except Exception as chart_exc:
             try:
-                return _load_yahoo_chart_fallback(symbol=symbol, as_of_date=as_of_date)
-            except Exception as chart_exc:
+                return _load_cached_raw_snapshot(symbol=symbol, as_of_date=as_of_date)
+            except ValueError as cached_exc:
                 raise ValueError(
-                    f"No live data returned for symbol={symbol}; cached snapshot unavailable; "
-                    f"Yahoo chart fallback failed: {chart_exc}"
-                ) from cached_exc
+                    f"No live data returned for symbol={symbol}; Yahoo chart fallback failed: {chart_exc}; "
+                    f"cached snapshot unavailable: {cached_exc}"
+                ) from chart_exc
 
     data["date"] = data["date"].dt.date
     data["symbol"] = symbol

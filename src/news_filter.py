@@ -10,7 +10,30 @@ from datetime import datetime, timedelta, timezone
 from pathlib import Path
 from typing import Optional
 
+try:
+    import truststore
+
+    truststore.inject_into_ssl()
+except Exception:
+    pass
+
 import anthropic
+
+
+_STATUS_PROBE_CACHE: dict[str, object] = {
+    "checked_at": 0.0,
+    "reachable": False,
+    "error": "",
+}
+_STATUS_PROBE_TTL_SECONDS = int(os.getenv("CLAUDE_STATUS_PROBE_TTL_SECONDS", "300"))
+
+
+def _get_anthropic_api_key() -> str:
+    """Read Anthropic API key from the runtime environment."""
+    api_key = os.getenv("ANTHROPIC_API_KEY", "").strip()
+    if len(api_key) >= 2 and api_key[0] == api_key[-1] and api_key[0] in {"'", '"'}:
+        api_key = api_key[1:-1].strip()
+    return api_key
 
 
 class NewsFilterGuardrails:
@@ -278,7 +301,7 @@ def filter_articles_with_claude(
         return [], "no_articles"
 
     # Call Claude
-    api_key = os.getenv("ANTHROPIC_API_KEY")
+    api_key = _get_anthropic_api_key()
     if not api_key:
         return raw_articles, "claude_failed_no_api_key"
 
@@ -415,8 +438,38 @@ def get_claude_status() -> dict:
             "status_message": str
         }
     """
-    api_key = os.getenv("ANTHROPIC_API_KEY")
+    api_key = _get_anthropic_api_key()
     api_key_present = bool(api_key and len(api_key) > 0)
+
+    claude_reachable = False
+    claude_error = ""
+
+    # Validate reachability/auth once per TTL so status is truthful but not noisy.
+    now_ts = time.time()
+    cache_age = now_ts - float(_STATUS_PROBE_CACHE.get("checked_at", 0.0) or 0.0)
+    if api_key_present and cache_age <= _STATUS_PROBE_TTL_SECONDS:
+        claude_reachable = bool(_STATUS_PROBE_CACHE.get("reachable", False))
+        claude_error = str(_STATUS_PROBE_CACHE.get("error", "") or "")
+    elif api_key_present:
+        try:
+            client = anthropic.Anthropic(api_key=api_key)
+            client.models.list(limit=1)
+            claude_reachable = True
+            claude_error = ""
+        except anthropic.APIConnectionError as exc:
+            claude_reachable = False
+            claude_error = f"connection_failed: {exc}"
+        except anthropic.APIStatusError as exc:
+            claude_reachable = False
+            status_code = getattr(exc, "status_code", "unknown")
+            claude_error = f"api_status_{status_code}: {exc}"
+        except Exception as exc:
+            claude_reachable = False
+            claude_error = f"unexpected_error: {exc}"
+
+        _STATUS_PROBE_CACHE["checked_at"] = now_ts
+        _STATUS_PROBE_CACHE["reachable"] = claude_reachable
+        _STATUS_PROBE_CACHE["error"] = claude_error
     
     cache = NewsCache()
     cached_tickers = len(cache._cache)
@@ -438,18 +491,32 @@ def get_claude_status() -> dict:
                 cache_ages[ticker] = -1
     
     # Determine status message
-    if api_key_present:
+    if api_key_present and claude_reachable:
         if cached_tickers > 0:
             oldest_age = max(cache_ages.values()) if cache_ages else 0
             status_msg = f"✅ Claude Active | {cached_tickers} ticker(s) cached | Oldest: {oldest_age:.1f}h"
         else:
             status_msg = "✅ Claude Active | Cache empty (will populate on first analysis)"
+    elif api_key_present:
+        if "api_status_401" in claude_error:
+            status_msg = (
+                "⚠️ Claude Unavailable (invalid API key) | Update ANTHROPIC_API_KEY "
+                "in Render Environment or local .env | Fallback: VADER only"
+            )
+        else:
+            status_msg = "⚠️ Claude Unavailable (API unreachable) | Check network/firewall/proxy | Fallback: VADER only"
+
+        if claude_error:
+            preview = claude_error.replace("\n", " ")[:140]
+            status_msg = f"{status_msg} | {preview}"
     else:
         status_msg = "⚠️ Claude Unavailable (missing API key) | Fallback: VADER only"
     
     return {
-        "claude_available": api_key_present,
+        "claude_available": bool(api_key_present and claude_reachable),
         "api_key_present": api_key_present,
+        "api_reachable": claude_reachable,
+        "api_error": claude_error,
         "cached_tickers": cached_tickers,
         "cache_sizes": cache_sizes,
         "cache_ages": cache_ages,

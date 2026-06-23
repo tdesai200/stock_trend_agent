@@ -2,6 +2,7 @@ from __future__ import annotations
 
 import atexit
 from datetime import date, datetime, timezone
+import json
 import os
 import re
 import signal
@@ -41,6 +42,121 @@ if load_dotenv is not None:
 MIN_ROWS_RSI_ATR = 14
 MIN_ROWS_TREND_MODEL = 50
 MAX_TICKERS_PER_REQUEST = 20
+MAX_WATCHLIST_SIZE = 20
+WATCHLIST_FILE = Path("data") / "watchlist.json"
+DAILY_SIGNALS_FILE = Path("data") / "watchlist_daily_signals.json"
+
+
+def _read_json_file(path: Path, default):
+    try:
+        if not path.exists():
+            return default
+        with path.open("r", encoding="utf-8") as f:
+            return json.load(f)
+    except Exception:
+        return default
+
+
+def _write_json_file(path: Path, payload: dict) -> None:
+    path.parent.mkdir(parents=True, exist_ok=True)
+    with path.open("w", encoding="utf-8") as f:
+        json.dump(payload, f, indent=2)
+
+
+def _load_watchlist() -> list[str]:
+    payload = _read_json_file(WATCHLIST_FILE, default={})
+    symbols = payload.get("symbols", []) if isinstance(payload, dict) else []
+    if not isinstance(symbols, list):
+        return []
+
+    cleaned: list[str] = []
+    for symbol in symbols:
+        token = str(symbol).strip().upper()
+        if token and token not in cleaned:
+            cleaned.append(token)
+    return cleaned
+
+
+def _save_watchlist(symbols: list[str]) -> None:
+    _write_json_file(
+        WATCHLIST_FILE,
+        {
+            "symbols": symbols,
+            "updated_at": datetime.now(timezone.utc).isoformat(),
+        },
+    )
+
+
+def _load_daily_signal_runs() -> list[dict]:
+    payload = _read_json_file(DAILY_SIGNALS_FILE, default={})
+    runs = payload.get("runs", []) if isinstance(payload, dict) else []
+    return runs if isinstance(runs, list) else []
+
+
+def _save_daily_signal_runs(runs: list[dict]) -> None:
+    _write_json_file(
+        DAILY_SIGNALS_FILE,
+        {
+            "runs": runs,
+            "updated_at": datetime.now(timezone.utc).isoformat(),
+        },
+    )
+
+
+def _upsert_daily_signal_run(as_of_date: date, analyzed_rows: list[dict]) -> None:
+    run_entry = {
+        "date": as_of_date.isoformat(),
+        "symbols": [
+            {
+                "symbol": row["symbol"],
+                "trend": row["trend"],
+                "final_decision": row["final_decision"],
+                "confidence": float(row["confidence"]),
+            }
+            for row in analyzed_rows
+        ],
+    }
+
+    runs = _load_daily_signal_runs()
+    replaced = False
+    for index, existing in enumerate(runs):
+        if isinstance(existing, dict) and existing.get("date") == run_entry["date"]:
+            runs[index] = run_entry
+            replaced = True
+            break
+
+    if not replaced:
+        runs.append(run_entry)
+
+    runs = sorted(
+        [run for run in runs if isinstance(run, dict) and run.get("date")],
+        key=lambda run: run["date"],
+    )[-30:]
+    _save_daily_signal_runs(runs)
+
+
+def _get_previous_trends(as_of_date: date) -> dict[str, str]:
+    runs = _load_daily_signal_runs()
+    prior_runs = [run for run in runs if isinstance(run, dict) and str(run.get("date", "")) < as_of_date.isoformat()]
+    if not prior_runs:
+        return {}
+
+    latest_prior = sorted(prior_runs, key=lambda run: str(run.get("date", "")))[-1]
+    trend_map: dict[str, str] = {}
+    for row in latest_prior.get("symbols", []):
+        if not isinstance(row, dict):
+            continue
+        symbol = str(row.get("symbol", "")).strip().upper()
+        trend = str(row.get("trend", "")).strip().lower()
+        if symbol and trend:
+            trend_map[symbol] = trend
+    return trend_map
+
+
+def _build_watchlist_chips(symbols: list[str]):
+    if not symbols:
+        return html.Span("No watchlist symbols saved yet.", className="watchlist-empty")
+    return html.Div([html.Span(symbol, className="watchlist-chip") for symbol in symbols], className="watchlist-chip-row")
 
 
 def _extract_ticker_from_question(question: str) -> str | None:
@@ -571,6 +687,7 @@ app.title = "Stock Trend Agent (Dash)"
 _initial_claude_status = get_claude_status().get("status_message", "Status unavailable")
 APP_SESSION_ID = str(uuid.uuid4())[:8]
 APP_STARTED_AT = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+INITIAL_WATCHLIST = _load_watchlist() or list(DEFAULT_CONFIG.symbols)
 
 app.layout = html.Div(
     [
@@ -606,6 +723,77 @@ app.layout = html.Div(
                 ),
             ],
             className="hero-shell",
+        ),
+        html.Div(
+            [
+                html.Div(
+                    [
+                        html.H3("Why This Product Is Useful", className="landing-title"),
+                        html.P(
+                            "Most investors lose time stitching together charts, headlines, macro signals, and earnings context across multiple tabs.",
+                            className="landing-text",
+                        ),
+                        html.P(
+                            "Stock Trend Agent turns that fragmented workflow into one explainable decision surface with confidence and rationale.",
+                            className="landing-text",
+                        ),
+                    ],
+                    className="landing-card",
+                ),
+                html.Div(
+                    [
+                        html.H3("What Value You Get", className="landing-title"),
+                        html.Ul(
+                            [
+                                html.Li("Faster signal triage across multiple tickers in one run."),
+                                html.Li("Transparent decision logic with criteria breakdown and reasons."),
+                                html.Li("Higher trust through trusted-source filtering, macro meter, and guardrails."),
+                                html.Li("An on-page assistant for quick explanations of trend, risk, and confidence."),
+                            ],
+                            className="landing-list",
+                        ),
+                    ],
+                    className="landing-card",
+                ),
+                html.Div(
+                    [
+                        html.H3("How It Works", className="landing-title"),
+                        html.Div(
+                            [
+                                html.Div([html.Strong("1"), html.Span("Ingest market + news + context streams")], className="landing-step"),
+                                html.Div([html.Strong("2"), html.Span("Compute technical, macro, earnings, and fundamentals signals")], className="landing-step"),
+                                html.Div([html.Strong("3"), html.Span("Generate confidence-aware decision with explainable rationale")], className="landing-step"),
+                            ],
+                            className="landing-steps",
+                        ),
+                    ],
+                    className="landing-card",
+                ),
+                html.Div(
+                    [
+                        html.A("Start Analyzing", href="#analyzer-start", className="landing-cta-primary"),
+                        html.Div(
+                            [
+                                html.A(
+                                    "Run analysis to unlock scorecard",
+                                    id="scorecard-jump-link",
+                                    href=None,
+                                    className="landing-cta-secondary landing-cta-disabled",
+                                ),
+                                html.Span(
+                                    "No analysis results yet. Run Analyze first to populate the scorecard.",
+                                    id="scorecard-jump-tooltip",
+                                    className="landing-cta-tooltip",
+                                ),
+                            ],
+                            id="scorecard-jump-wrap",
+                            className="landing-cta-tooltip-wrap is-disabled",
+                        ),
+                    ],
+                    className="landing-cta-row",
+                ),
+            ],
+            className="landing-shell",
         ),
         html.Div(
             [
@@ -646,17 +834,61 @@ app.layout = html.Div(
             style={"backgroundColor": "#f9f7f4", "borderLeft": "4px solid #ff9800"},
         ),
         html.Br(),
+        html.H3("Watchlist", className="section-title"),
+        html.Div(
+            [
+                html.Label("My Watchlist (comma separated)"),
+                dcc.Input(
+                    id="watchlist-input",
+                    type="text",
+                    value=", ".join(INITIAL_WATCHLIST),
+                    className="ticker-input",
+                ),
+                html.Div(
+                    [
+                        html.Button("Save Watchlist", id="save-watchlist-button", n_clicks=0, className="analyze-button"),
+                        html.Button("Run Daily Signals", id="run-watchlist-signals-button", n_clicks=0, className="analyze-button"),
+                    ],
+                    className="watchlist-actions",
+                ),
+                html.Div("Saved watchlist ready.", id="watchlist-status", className="watchlist-status"),
+                html.Div(_build_watchlist_chips(INITIAL_WATCHLIST), id="watchlist-current"),
+            ],
+            className="card",
+        ),
+        html.Br(),
+        html.Div(
+            [
+                html.H4("Daily Watchlist Signals", style={"marginTop": 0}),
+                html.Div(
+                    "Trend reversal notifications will appear here after running daily signals.",
+                    id="trend-alert-panel",
+                    className="trend-alert-panel",
+                ),
+                dash_table.DataTable(
+                    id="daily-signals-table",
+                    columns=[],
+                    data=[],
+                    style_table={"overflowX": "auto", "borderRadius": "12px"},
+                    style_cell={"textAlign": "left", "padding": "10px", "maxWidth": 320, "whiteSpace": "normal", "border": "none"},
+                    style_header={"fontWeight": "bold", "backgroundColor": "#f1efe8", "border": "none"},
+                    style_data={"backgroundColor": "#fffdf8", "border": "none"},
+                ),
+            ],
+            className="card",
+        ),
+        html.Br(),
         html.Div(
             [
                 html.Label("Tickers (comma separated)"),
                 dcc.Input(
                     id="ticker-input",
                     type="text",
-                    value=", ".join(DEFAULT_CONFIG.symbols),
+                    value=", ".join(INITIAL_WATCHLIST),
                     className="ticker-input",
                 ),
             ]
-        , className="card"),
+        , id="analyzer-start", className="card"),
         html.Br(),
         html.Div(
             [
@@ -682,7 +914,7 @@ app.layout = html.Div(
         , className="card"),
         html.Br(),
         html.Div(id="error-panel", className="error-panel"),
-        html.H3("Scorecard", className="section-title"),
+        html.H3("Scorecard", id="scorecard-anchor", className="section-title"),
         dash_table.DataTable(
             id="scorecard-table",
             columns=[],
@@ -1016,6 +1248,163 @@ def run_analysis(n_clicks: int, ticker_text: str, asof_date_value: str, claude_f
 
 
 @app.callback(
+    Output("watchlist-status", "children"),
+    Output("watchlist-current", "children"),
+    Output("watchlist-input", "value"),
+    Output("ticker-input", "value"),
+    Input("save-watchlist-button", "n_clicks"),
+    State("watchlist-input", "value"),
+    prevent_initial_call=True,
+)
+def save_watchlist(n_clicks: int, watchlist_text: str):
+    del n_clicks
+    symbols = _parse_tickers(watchlist_text or "")
+    deduped: list[str] = []
+    for symbol in symbols:
+        if symbol not in deduped:
+            deduped.append(symbol)
+
+    if not deduped:
+        status = html.Span("Watchlist is empty. Add at least one ticker.", style={"color": "#b00020", "fontWeight": "bold"})
+        return status, _build_watchlist_chips([]), "", ""
+
+    if len(deduped) > MAX_WATCHLIST_SIZE:
+        status = html.Span(
+            f"Watchlist exceeds limit ({MAX_WATCHLIST_SIZE}). Reduce symbols and try again.",
+            style={"color": "#b00020", "fontWeight": "bold"},
+        )
+        return status, _build_watchlist_chips(deduped), ", ".join(deduped), ", ".join(deduped)
+
+    try:
+        for symbol in deduped:
+            _validate_ticker_symbol(symbol)
+    except GuardrailError as exc:
+        status = html.Span(str(exc), style={"color": "#b00020", "fontWeight": "bold"})
+        return status, _build_watchlist_chips(deduped), ", ".join(deduped), ", ".join(deduped)
+
+    _save_watchlist(deduped)
+    status = html.Span(
+        f"Watchlist saved ({len(deduped)} symbols).",
+        style={"color": "#0d7f5f", "fontWeight": "bold"},
+    )
+    normalized = ", ".join(deduped)
+    return status, _build_watchlist_chips(deduped), normalized, normalized
+
+
+@app.callback(
+    Output("daily-signals-table", "columns"),
+    Output("daily-signals-table", "data"),
+    Output("trend-alert-panel", "children"),
+    Input("run-watchlist-signals-button", "n_clicks"),
+    State("watchlist-input", "value"),
+    State("asof-date", "date"),
+    State("claude-filter-toggle", "value"),
+    prevent_initial_call=True,
+)
+def run_watchlist_daily_signals(n_clicks: int, watchlist_text: str, asof_date_value: str, claude_filter_value: list):
+    if not n_clicks:
+        raise Exception("Cancelled")
+
+    tickers = _parse_tickers(watchlist_text or "")
+    as_of_date = date.fromisoformat(asof_date_value)
+    use_claude_filter = "claude_enabled" in (claude_filter_value or [])
+
+    try:
+        _validate_request(tickers=tickers, as_of_date=as_of_date)
+    except GuardrailError as exc:
+        return [], [], html.Div(str(exc), className="trend-alert trend-alert-error")
+
+    results: list[dict] = []
+    failures: list[str] = []
+    for symbol in tickers:
+        try:
+            results.append(analyze_symbol(symbol=symbol, as_of_date=as_of_date, use_claude_filter=use_claude_filter))
+        except Exception as exc:
+            failures.append(f"{symbol}: {exc}")
+
+    columns = [
+        {"name": "Symbol", "id": "symbol"},
+        {"name": "Trend", "id": "trend_display"},
+        {"name": "Decision", "id": "final_decision"},
+        {"name": "Confidence", "id": "confidence"},
+        {"name": "Explainable Reason", "id": "reason"},
+        {"name": "Trusted Headlines", "id": "headlines"},
+    ]
+
+    rows = []
+    for row in results:
+        reason = row.get("reasons", ["No reason generated"])[:1]
+        headlines = row.get("news_headlines", [])[:2]
+        rows.append(
+            {
+                "symbol": row["symbol"],
+                "trend_display": _format_trend_badge(row["trend"]),
+                "trend": row["trend"],
+                "final_decision": row["final_decision"],
+                "confidence": f"{row['confidence']:.2f}",
+                "reason": reason[0] if reason else "No reason generated",
+                "headlines": " | ".join(headlines) if headlines else "No trusted headlines available",
+            }
+        )
+
+    previous_trends = _get_previous_trends(as_of_date=as_of_date)
+    alerts: list[str] = []
+    for row in rows:
+        symbol = row["symbol"]
+        current = str(row.get("trend", "")).lower()
+        previous = str(previous_trends.get(symbol, "")).lower()
+        if previous in {"uptrend", "downtrend"} and current in {"uptrend", "downtrend"} and previous != current:
+            alerts.append(f"Trend reversal for {symbol}: {previous} -> {current}")
+
+    if rows:
+        _upsert_daily_signal_run(as_of_date=as_of_date, analyzed_rows=rows)
+
+    alert_nodes = []
+    if alerts:
+        alert_nodes.extend([html.Div(msg, className="trend-alert trend-alert-warning") for msg in alerts])
+    else:
+        alert_nodes.append(html.Div("No trend reversal alerts for this run.", className="trend-alert trend-alert-ok"))
+
+    if failures:
+        alert_nodes.extend([html.Div(msg, className="trend-alert trend-alert-error") for msg in failures])
+
+    # Do not expose raw trend helper column in table.
+    cleaned_rows = [{k: v for k, v in row.items() if k != "trend"} for row in rows]
+    return columns, cleaned_rows, alert_nodes
+
+
+@app.callback(
+    Output("scorecard-jump-link", "href"),
+    Output("scorecard-jump-link", "className"),
+    Output("scorecard-jump-link", "children"),
+    Output("scorecard-jump-wrap", "className"),
+    Output("scorecard-jump-tooltip", "className"),
+    Output("scorecard-jump-tooltip", "children"),
+    Input("scorecard-table", "data"),
+)
+def toggle_scorecard_jump_link(scorecard_rows: list[dict] | None):
+    has_rows = bool(scorecard_rows)
+    if has_rows:
+        return (
+            "#scorecard-anchor",
+            "landing-cta-secondary",
+            "Jump To Scorecard",
+            "landing-cta-tooltip-wrap",
+            "landing-cta-tooltip",
+            "",
+        )
+
+    return (
+        None,
+        "landing-cta-secondary landing-cta-disabled",
+        "Run analysis to unlock scorecard",
+        "landing-cta-tooltip-wrap is-disabled",
+        "landing-cta-tooltip",
+        "No analysis results yet. Run Analyze first to populate the scorecard.",
+    )
+
+
+@app.callback(
     Output("chat-modal-container", "style"),
     Input("chat-bubble-button", "n_clicks"),
     Input("close-chat-button", "n_clicks"),
@@ -1216,7 +1605,7 @@ def update_chat_context(n_clicks: int, ticker_text: str, asof_date_value: str, c
                 ),
                 html.Br(),
                 html.Span(
-                    "To enable Claude: Add ANTHROPIC_API_KEY to .env file and restart",
+                    "To enable Claude: set ANTHROPIC_API_KEY in Render Environment or local .env, then restart/redeploy",
                     style={"fontSize": "12px", "color": "#999", "fontStyle": "italic"}
                 ),
             ]

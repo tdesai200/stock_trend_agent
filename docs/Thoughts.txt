@@ -42,3 +42,5 @@ What I’d do next if we start immediately
 Build backtesting and metrics dashboard first.
 Add portfolio ranking + chart panel second.
 Improve macro/news scoring sophistication third.
+
+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
